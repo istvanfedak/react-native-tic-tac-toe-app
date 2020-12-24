@@ -11,9 +11,10 @@ import {
 import { FlatGrid } from 'react-native-super-grid';
 
 const Square = (props) => {
+  const squareStyle = (props.highlight? [styles.square, styles.win] : [styles.square])
   return (
     <TouchableOpacity
-      style={styles.square}
+      style={squareStyle}
       onPress={props.onPress}
     >
       <Text style={styles.squareText}>
@@ -23,21 +24,51 @@ const Square = (props) => {
   );
 }
 
+const ResetButton = (props) => {
+  return (
+    <TouchableOpacity
+      style={styles.resetButton}
+      onPress={props.onPress}
+    >
+      <Text style={styles.resetButtonText}>
+        {props.value}
+      </Text>
+    </TouchableOpacity>
+  );
+}
+
 const Board = (props) => {
-  const renderSquare = (i) => {
+
+  const renderResetButton = () => {
     return (
-      <Square 
-        value={props.squares[i]} 
-        onPress={()=> {props.onPress(i)}}
+      <ResetButton
+        value={'RESET'} 
+        onPress={()=> {props.handleReset()}}
       />
     );
   }
 
+  const renderSquare = (i) => {
+    const winSquares = props.winSquares;
+    const onPress = props.onPress
+    if(i == 9) return <View></View> // skip a button to center reset button
+    if(i == 10) return (renderResetButton());
+
+    return (
+      <Square 
+        value={props.squares[i]} 
+        onPress={()=> {props.onPress(i)}}
+        highlight={winSquares && winSquares.includes(i)}
+      /> 
+    );
+  }
+  
   return (
     <View style={styles.container}>
       <FlatGrid
-        itemDimension={100}
-        data={[0,1,2,3,4,5,6,7,8]}
+        style={styles.flatGrid}
+        itemDimension={85}
+        data={[0,1,2,3,4,5,6,7,8,9,10]}
         renderItem={({ item }) => (
           renderSquare(item)
         )}
@@ -79,15 +110,14 @@ class Game extends React.Component {
   
   render() {
     const squares = this.state.squares.slice();
+    const winInfo = calculateWinner(squares);
     return (
       <View style={styles.container}>
         <Board 
           squares={squares}
           onPress={(i)=>this.handleClick(i)}
-        />
-        <Button 
-        onPress={()=>this.handleReset()}
-        title='Reset'
+          handleReset={()=>this.handleReset()}
+          winSquares={winInfo.winSquares}
         />
       </View>
     )
@@ -117,9 +147,16 @@ function calculateWinner(squares) {
 const styles = StyleSheet.create({
     container: {
         flex:1,
+        backgroundColor: 'white',
         color: 'blue',
         justifyContent: "center",
         alignItems: "center"
+    },
+
+    flatGrid: {
+      marginTop: 160,
+      width: 300,
+      flex: 1,
     },
 
     squareText: {
@@ -128,16 +165,38 @@ const styles = StyleSheet.create({
     },
     
     square: {
-      backgroundColor: 'white',
-      width: 120,
-      height: 120,
+      backgroundColor: 'rgb(229, 229, 229)',
+      width: 80,
+      height: 80,
       justifyContent: 'center',
       alignItems: 'center',
       flex:1,
-      borderColor: 'black',
+      borderColor: 'rgb(229, 229, 229)',
       borderWidth: 2,
-      borderRadius: 60
-    }
+      borderRadius: 40
+    },
+
+    win: {
+      backgroundColor: '#82F2A7',
+      borderColor: '#82F2A7'
+    },
+
+    resetButtonText: {
+      fontWeight: 'bold',
+      fontSize: 17,
+    },
+
+    resetButton: { 
+      backgroundColor: '#82F2A7',
+      width: 80,
+      height: 80,
+      justifyContent: 'center',
+      alignItems: 'center',
+      flex:1,
+      borderColor: '#82F2A7',
+      borderWidth: 2,
+      borderRadius: 40
+    },
 });
 
 export default Game;
